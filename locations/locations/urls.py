@@ -16,6 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from . import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('locations/find/', views.find_locations, name="find_location"),
+    path('locations/find/nearby/', views.find_nearby_locations, name="find_nearby_locations"),
+    path('locations/<location_id>/', views.get_location, name="get_location"),
 ]
