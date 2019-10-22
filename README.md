@@ -110,7 +110,7 @@ Finds a location nearby.
 Method: GET
 
 |Parameter|Explanation|Mandatory|
-|-|-|
+|-|-|-|
 |longitude|The longitude of the position to be searched.|yes|
 |latitude|The loatitude of the position to be searched.|yes|
 |radius|The radius in meters for results to be fetched.|no (Default is 10000m)|
