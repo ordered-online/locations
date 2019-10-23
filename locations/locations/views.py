@@ -2,16 +2,52 @@ import json
 from decimal import Decimal
 
 from django.core import serializers
-from django.forms import model_to_dict
 from django.http import JsonResponse
 
 from locations import settings
 from locations.models import Location, Tag, Category
 
 
-def find_locations(request):
+class SuccessResponse(JsonResponse):
+    def __init__(self, response=None, *args, **kwargs):
+        if response is None:
+            super().__init__({
+                "success": True,
+            }, *args, **kwargs)
+        else:
+            super().__init__({
+                "success": True,
+                "response": response
+            }, *args, **kwargs)
+
+
+class AbstractFailureResponse(JsonResponse):
+    reason = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__({
+            "success": False,
+            "reason": self.reason
+        }, *args, **kwargs)
+
+
+class IncorrectAccessMethod(AbstractFailureResponse):
+    reason = "incorrect_access_method"
+
+
+class ErroneousValue(AbstractFailureResponse):
+    reason = "erroneous_value"
+
+
+class LocationNotFound(AbstractFailureResponse):
+    reason = "location_not_found"
+
+
+def find_locations(request) -> JsonResponse:
+    """Find locations via GET."""
+
     if request.method != "GET":
-        return JsonResponse({"success": False})
+        return IncorrectAccessMethod()
 
     locations = Location.objects.all()
 
@@ -41,25 +77,29 @@ def find_locations(request):
         else:
             locations = locations.intersection(tag.location_set.all())
 
-    return JsonResponse(
+    locations = locations[:settings.MAX_RESULTS]
+
+    return SuccessResponse(
         json.loads(serializers.serialize("json", locations)),
         safe=False
     )
 
 
-def find_nearby_locations(request):
+def find_nearby_locations(request) -> JsonResponse:
+    """Find locations near a given coordinate via GET."""
+
     if request.method != "GET":
-        return JsonResponse({"success": False})
+        return IncorrectAccessMethod()
 
     locations = Location.objects.all()
 
     try:
         longitude = float(request.GET.get("longitude"))
         latitude = float(request.GET.get("latitude"))
+        radius = float(request.GET.get("radius", settings.DEFAULT_SEARCH_RADIUS))
     except (ValueError, TypeError):
-        return JsonResponse({"success": False})
+        return ErroneousValue()
 
-    radius = float(request.GET.get("radius", settings.DEFAULT_SEARCH_RADIUS))
     max_lat, max_lon, min_lat, min_lon = Location.search_bounds(
         radius, latitude=latitude, longitude=longitude
     )
@@ -71,30 +111,30 @@ def find_nearby_locations(request):
         longitude__lte=Decimal(max_lon),
     )
 
-    return JsonResponse(
-        json.loads(serializers.serialize("json", locations)),
+    locations = locations[:settings.MAX_RESULTS]
+
+    return SuccessResponse(
+        [
+            {
+                "distance": location.distance_from(longitude=longitude, latitude=latitude),
+                "location": location.dict_representation
+            }
+            for location in locations
+        ],
         safe=False
     )
 
 
-def get_location(request, location_id):
+def get_location(request, location_id) -> JsonResponse:
+    """Get a location by its id via GET."""
+
     if request.method != "GET":
-        return JsonResponse({"success": False})
+        return IncorrectAccessMethod()
 
     try:
         location = Location.objects.get(id=location_id)
     except Location.DoesNotExist:
-        return JsonResponse({"success": False})
+        return LocationNotFound()
 
-    location_dict = model_to_dict(location)
-
-    categories = location_dict.get("categories")
-    if categories:
-        location_dict["categories"] = [model_to_dict(c) for c in categories]
-
-    categories = location_dict.get("tags")
-    if categories:
-        location_dict["tags"] = [model_to_dict(c) for c in categories]
-
-    return JsonResponse(location_dict)
+    return SuccessResponse(location.dict_representation)
 
