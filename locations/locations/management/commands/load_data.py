@@ -34,8 +34,8 @@ class Command(BaseCommand):
                         "mit Gerichten aus Trinidad, Jamaika und Martinique.",
             address="Kleine Brüdergasse, 01067 Dresden",
 
-            latitude=Decimal(51.0250869),
-            longitude=Decimal(13.7210005),
+            latitude=Decimal(51.0516273),
+            longitude=Decimal(13.732316),
         )
         turtle_bay.tags.add(popular, caribbean, ddff)
         turtle_bay.categories.add(restaurant, bar)
