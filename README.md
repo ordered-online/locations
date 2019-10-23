@@ -47,9 +47,8 @@ $ curl -i -X GET http://127.0.0.1:8000/locations/find/?name=asci
    "success":true,
    "response":[ 
       { 
-         "model":"locations.location",
-         "pk":1,
-         "fields":{ 
+         "location":{ 
+            "id":1,
             "name":"Studentencaf\u00e9 Ascii",
             "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
             "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
@@ -59,12 +58,20 @@ $ curl -i -X GET http://127.0.0.1:8000/locations/find/?name=asci
             "website":null,
             "telephone":null,
             "categories":[ 
-               "Cafe"
+               { 
+                  "name":"Cafe"
+               }
             ],
             "tags":[ 
-               "calm",
-               "inexpensive",
-               "insider"
+               { 
+                  "name":"calm"
+               },
+               { 
+                  "name":"inexpensive"
+               },
+               { 
+                  "name":"insider"
+               }
             ]
          }
       }
@@ -80,9 +87,8 @@ $ curl -i -X GET http://127.0.0.1:8000/locations/find/?tag=calm&category=cafe
    "success":true,
    "response":[ 
       { 
-         "model":"locations.location",
-         "pk":1,
-         "fields":{ 
+         "location":{ 
+            "id":1,
             "name":"Studentencaf\u00e9 Ascii",
             "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
             "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
@@ -92,12 +98,20 @@ $ curl -i -X GET http://127.0.0.1:8000/locations/find/?tag=calm&category=cafe
             "website":null,
             "telephone":null,
             "categories":[ 
-               "Cafe"
+               { 
+                  "name":"Cafe"
+               }
             ],
             "tags":[ 
-               "calm",
-               "inexpensive",
-               "insider"
+               { 
+                  "name":"calm"
+               },
+               { 
+                  "name":"inexpensive"
+               },
+               { 
+                  "name":"insider"
+               }
             ]
          }
       }
@@ -178,30 +192,36 @@ Example with `curl`:
 ```
 $ curl -i -X GET http://127.0.0.1:8000/locations/1/
 
-[ 
-   { 
-      "model":"locations.location",
-      "pk":1,
-      "fields":{ 
-         "name":"Studentencaf\u00e9 Ascii",
-         "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
-         "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-         "user_id":null,
-         "latitude":"51.02508690",
-         "longitude":"13.72100050",
-         "website":null,
-         "telephone":null,
-         "categories":[ 
-            "Caf\u00e9"
-         ],
-         "tags":[ 
-            "calm",
-            "inexpensive",
-            "insider"
-         ]
-      }
+{ 
+   "success":true,
+   "response":{ 
+      "id":1,
+      "name":"Studentencaf\u00e9 Ascii",
+      "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
+      "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
+      "user_id":null,
+      "latitude":"51.02508690",
+      "longitude":"13.72100050",
+      "website":null,
+      "telephone":null,
+      "categories":[ 
+         { 
+            "name":"Cafe"
+         }
+      ],
+      "tags":[ 
+         { 
+            "name":"calm"
+         },
+         { 
+            "name":"inexpensive"
+         },
+         { 
+            "name":"insider"
+         }
+      ]
    }
-]
+}
 ```
 
 Failure Responses:

@@ -80,7 +80,12 @@ def find_locations(request) -> JsonResponse:
     locations = locations[:settings.MAX_RESULTS]
 
     return SuccessResponse(
-        json.loads(serializers.serialize("json", locations)),
+        [
+            {
+                "location": location.dict_representation
+            }
+            for location in locations
+        ],
         safe=False
     )
 
