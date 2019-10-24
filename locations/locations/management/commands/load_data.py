@@ -21,6 +21,7 @@ class Command(BaseCommand):
             name="Studentencafé Ascii",
             description="Gemütliches Café in der Fak. Informatik der TU Dresden.",
             address="Nöthnitzer Str. 46, 01187 Dresden",
+            user_id=0,
 
             latitude=Decimal(51.0250869),
             longitude=Decimal(13.7210005),
@@ -33,6 +34,7 @@ class Command(BaseCommand):
             description="Karibisches Restaurant in gemütlicher Atmosphäre "
                         "mit Gerichten aus Trinidad, Jamaika und Martinique.",
             address="Kleine Brüdergasse, 01067 Dresden",
+            user_id=0,
 
             latitude=Decimal(51.0516273),
             longitude=Decimal(13.732316),
@@ -44,6 +46,7 @@ class Command(BaseCommand):
             name="Steak Royal",
             description="Steak-Spezialitäten vom Grill und vieles mehr.",
             address="Weiße Gasse 4, 01067 Dresden",
+            user_id=0,
 
             latitude=Decimal(51.0491),
             longitude=Decimal(13.738407),

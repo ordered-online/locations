@@ -14,12 +14,12 @@ class Tag(models.Model):
 
 class Location(models.Model):
     # mandatory fields
-    name = models.TextField(max_length=100)
+    name = models.TextField(unique=True, max_length=100)
     description = models.TextField(max_length=500)
-    address = models.TextField(max_length=200)
+    address = models.TextField(unique=True, max_length=200)
+    user_id = models.IntegerField()
 
     # optional fields
-    user_id = models.IntegerField(null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=8, null=True, blank=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=8, null=True, blank=True)
     website = models.TextField(max_length=100, null=True, blank=True)
@@ -28,6 +28,9 @@ class Location(models.Model):
     # many to many fields
     categories = models.ManyToManyField(Category)
     tags = models.ManyToManyField(Tag)
+
+    class Meta:
+        unique_together = ["latitude", "longitude"]
 
     @property
     def dict_representation(self):

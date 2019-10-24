@@ -20,13 +20,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'wail=%#b-gychv_ht!9s$ey=hdxm)ao=6j_5)5x4)2353wdkto'
+SECRET_KEY = os.environ.get('SECRET_KEY', default='866tdsx)3#!g!7bq)ppj2lzd_3@s%ug=2$8pgvh9mq-az0%$r3')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(os.environ.get('DEBUG', default=1)))
 
-ALLOWED_HOSTS = []
 
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="*").split()
+
+VERIFICATION_SERVICE_URL = os.environ.get("VERIFICATION_SERVICE_URL", default="http://127.0.0.1:8000")
 
 # Application definition
 
@@ -45,7 +47,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # FIXME: 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -77,8 +79,12 @@ WSGI_APPLICATION = 'locations.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'locations.db.sqlite3'),
+        'ENGINE': os.environ.get('SQL_ENGINE', default='django.db.backends.sqlite3'),
+        'NAME': os.environ.get('SQL_DATABASE', default=os.path.join(BASE_DIR, 'locations.db.sqlite3')),
+        'USER': os.environ.get('SQL_USER', default='user'),
+        'PASSWORD': os.environ.get('SQL_PASSWORD', default='password'),
+        'HOST': os.environ.get('SQL_HOST', default='localhost'),
+        'PORT': os.environ.get('SQL_PORT', default='5432'),
     }
 }
 

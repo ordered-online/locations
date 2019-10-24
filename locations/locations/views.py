@@ -1,11 +1,13 @@
 import json
 from decimal import Decimal
+from json import JSONDecodeError
 
-from django.core import serializers
+import requests
+from django.db import IntegrityError
 from django.http import JsonResponse
 
-from locations import settings
-from locations.models import Location, Tag, Category
+from . import settings
+from .models import Location, Tag, Category
 
 
 class SuccessResponse(JsonResponse):
@@ -41,6 +43,22 @@ class ErroneousValue(AbstractFailureResponse):
 
 class LocationNotFound(AbstractFailureResponse):
     reason = "location_not_found"
+
+
+class IncorrectSessionKey(AbstractFailureResponse):
+    reason = "incorrect_session_key"
+
+
+class IncorrectUserId(AbstractFailureResponse):
+    reason = "incorrect_user_id"
+
+
+class MalformedJson(AbstractFailureResponse):
+    reason = "malformed_json"
+
+
+class IncorrectCredentials(AbstractFailureResponse):
+    reason = "incorrect_credentials"
 
 
 def find_locations(request) -> JsonResponse:
@@ -143,3 +161,64 @@ def get_location(request, location_id) -> JsonResponse:
 
     return SuccessResponse(location.dict_representation)
 
+
+def create_location(request) -> JsonResponse:
+    """Create a location via POST."""
+    if request.method != "POST":
+        return IncorrectAccessMethod()
+
+    try:
+        data = json.loads(request.body)
+    except JSONDecodeError:
+        return MalformedJson()
+
+    session_key = data.get("session_key")
+    if not session_key:
+        return IncorrectCredentials()
+    user_id = data.get("user_id")
+    if not user_id:
+        return IncorrectCredentials()
+
+    response = requests.post(
+        "{}/verification/verify/".format(settings.VERIFICATION_SERVICE_URL),
+        data=json.dumps({"session_key": session_key, "user_id": user_id})
+    )
+    verification_data = response.json()
+    success = verification_data.get("success")
+    if not success:
+        return IncorrectCredentials()
+
+    location_data = data.get("location")
+    if not location_data:
+        return MalformedJson()
+
+    if "id" in location_data:
+        return MalformedJson()
+
+    location_deserializable_data = location_data
+    if "tags" in location_deserializable_data:
+        del location_deserializable_data["tags"]
+    if "categories" in location_deserializable_data:
+        del location_deserializable_data["categories"]
+
+    location = Location(**location_data)
+    if location.user_id != user_id:
+        return MalformedJson()
+    try:
+        location.save()
+    except IntegrityError:
+        return MalformedJson()
+
+    tags = location_data.get("tags")
+    if tags:
+        for tag in tags:
+            tag, _ = Tag.objects.get_or_create(**tag)
+            location.tags.add(tag)
+
+    categories = location_data.get("categories")
+    if categories:
+        for category in categories:
+            category, _ = Tag.objects.get_or_create(**category)
+            location.categories.add(category)
+
+    return SuccessResponse()
