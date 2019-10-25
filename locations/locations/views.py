@@ -3,6 +3,7 @@ from decimal import Decimal
 from json import JSONDecodeError
 
 import requests
+import typing
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views import View
@@ -128,14 +129,17 @@ def find_nearby_locations(request) -> JsonResponse:
     try:
         longitude = float(request.GET.get("longitude"))
         latitude = float(request.GET.get("latitude"))
+        # the radius query parameter is optional
         radius = float(request.GET.get("radius", settings.DEFAULT_SEARCH_RADIUS))
     except (ValueError, TypeError):
         return ErroneousValue()
 
+    # compute the search bounds as longitudinal and latitudinal values
     max_lat, max_lon, min_lat, min_lon = Location.search_bounds(
         radius, latitude=latitude, longitude=longitude
     )
 
+    # search the location by django orm
     locations = locations.filter(
         latitude__gte=Decimal(min_lat),
         latitude__lte=Decimal(max_lat),
@@ -143,6 +147,7 @@ def find_nearby_locations(request) -> JsonResponse:
         longitude__lte=Decimal(max_lon),
     )
 
+    # limit the results by a certain amount
     locations = locations[:settings.MAX_RESULTS]
 
     return SuccessResponse(
@@ -153,6 +158,8 @@ def find_nearby_locations(request) -> JsonResponse:
             }
             for location in locations
         ],
+        # disable safe mode, because otherwise, the list could not be serialized
+        # and we are sure, that all data is safe
         safe=False
     )
 
@@ -180,6 +187,7 @@ def verify_user(data: dict) -> tuple:
     if not user_id:
         raise ValueError()
 
+    # send a post request to the verification service endpoint
     response = requests.post(
         "{}/verification/verify/".format(settings.VERIFICATION_SERVICE_URL),
         data=json.dumps({"session_key": session_key, "user_id": user_id})
@@ -189,6 +197,37 @@ def verify_user(data: dict) -> tuple:
         raise ValueError()
 
     return user_id, session_key
+
+
+def make_location(location_data: dict) -> JsonResponse:
+    """Translate the given location data to a location model."""
+
+    # infer all kwargs from the passed location data,
+    # but exclude the many to many fields,
+    # since they must be handled separately
+    location = Location(**{
+        x: location_data[x] for x in location_data
+        if x not in ["tags", "categories"]
+    })
+    try:
+        # do not use objects.create to allow id based location editing
+        location.save()
+    except IntegrityError:
+        # if the passed location data violates any
+        # uniqueness constraints, this fallback is called
+        return DuplicateLocation()
+
+    tags = location_data.get("tags")
+    if tags:
+        # infer all kwargs from the passed location data
+        location.tags.set(Tag.objects.get_or_create(**t)[0] for t in tags)
+
+    categories = location_data.get("categories")
+    if categories:
+        # infer all kwargs from the passed location data
+        location.categories.set(Category.objects.get_or_create(**c)[0] for c in categories)
+
+    return SuccessResponse()
 
 
 def create_location(request) -> JsonResponse:
@@ -212,32 +251,70 @@ def create_location(request) -> JsonResponse:
     if not location_data:
         return MalformedJson()
 
+    # this is necessary, because the user
+    # should not create locations with another
+    # user id than his own
+    if location_data.get("user_id") != user_id:
+        return MalformedJson()
+
+    # the key "id" is disallowed, because django
+    # would interpret the id key as the primary key
+    # of the location object and therefore change
+    # the properties of a potentially existing location
     if "id" in location_data:
         return MalformedJson()
 
-    location = Location(**{
-        x: location_data[x] for x in location_data
-        if x not in ["tags", "categories"]
-    })
-    if location.user_id != user_id:
-        return MalformedJson()
+    return make_location(location_data)
+
+
+def edit_location(request, location_id) -> JsonResponse:
+    """Edit the given location via POST."""
+
+    if request.method != "POST":
+        return IncorrectAccessMethod()
+
     try:
-        location.save()
-    except IntegrityError:
-        return DuplicateLocation()
+        location = Location.objects.get(id=location_id)
+    except Location.DoesNotExist:
+        return LocationNotFound()
 
-    tags = location_data.get("tags")
-    if tags:
-        for tag in tags:
-            tag, _ = Tag.objects.get_or_create(**tag)
-            location.tags.add(tag)
+    try:
+        data = json.loads(request.body)
+    except JSONDecodeError:
+        return MalformedJson()
 
-    categories = location_data.get("categories")
-    if categories:
-        for category in categories:
-            category, _ = Category.objects.get_or_create(**category)
-            location.categories.add(category)
+    try:
+        user_id, session_key = verify_user(data)
+    except ValueError:
+        return IncorrectCredentials()
+    except requests.ConnectionError:
+        return VerificationServiceUnavailable()
 
-    return SuccessResponse()
+    # ensure, that the fetched location
+    # belongs to the user
+    if user_id != location.user_id:
+        return MalformedJson()
+
+    location_data = data.get("location")
+    if not location_data:
+        return MalformedJson()
+
+    # disallow the key "id" to avoid overriding of
+    # the wrong location, because the id of the location is
+    # already inferred by the url
+    if "id" in location_data:
+        return MalformedJson()
+
+    # avoid overriding of the wrong location
+    # due to erroneous user ids being passed
+    if location_data.get("user_id") != user_id:
+        return MalformedJson()
+
+    # set the id attribute as inferred by the url
+    # to make it possible for django to edit
+    # the correct object
+    location_data["id"] = location.id
+
+    return make_location(location_data)
 
 

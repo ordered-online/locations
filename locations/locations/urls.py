@@ -25,4 +25,5 @@ urlpatterns = [
     path('locations/nearby/', views.find_nearby_locations, name="find_nearby_locations"),
     path('locations/get/<location_id>/', views.get_location, name="get_location"),
     path('locations/create/', views.create_location, name="create_location"),
+    path('locations/edit/<location_id>/', views.edit_location, name="edit_location"),
 ]
