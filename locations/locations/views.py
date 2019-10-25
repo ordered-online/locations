@@ -5,6 +5,7 @@ from json import JSONDecodeError
 import requests
 from django.db import IntegrityError
 from django.http import JsonResponse
+from django.views import View
 
 from . import settings
 from .models import Location, Tag, Category
@@ -59,6 +60,14 @@ class MalformedJson(AbstractFailureResponse):
 
 class IncorrectCredentials(AbstractFailureResponse):
     reason = "incorrect_credentials"
+
+
+class DuplicateLocation(AbstractFailureResponse):
+    reason = "duplicate_location"
+
+
+class VerificationServiceUnavailable(AbstractFailureResponse):
+    reason = "verification_service_unavailable"
 
 
 def find_locations(request) -> JsonResponse:
@@ -162,6 +171,26 @@ def get_location(request, location_id) -> JsonResponse:
     return SuccessResponse(location.dict_representation)
 
 
+def verify_user(data: dict) -> tuple:
+    """Verify the user with the verification service."""
+    session_key = data.get("session_key")
+    if not session_key:
+        raise ValueError()
+    user_id = data.get("user_id")
+    if not user_id:
+        raise ValueError()
+
+    response = requests.post(
+        "{}/verification/verify/".format(settings.VERIFICATION_SERVICE_URL),
+        data=json.dumps({"session_key": session_key, "user_id": user_id})
+    )
+    verification_data = response.json()
+    if verification_data.get("success") is not True:
+        raise ValueError()
+
+    return user_id, session_key
+
+
 def create_location(request) -> JsonResponse:
     """Create a location via POST."""
     if request.method != "POST":
@@ -172,21 +201,12 @@ def create_location(request) -> JsonResponse:
     except JSONDecodeError:
         return MalformedJson()
 
-    session_key = data.get("session_key")
-    if not session_key:
+    try:
+        user_id, session_key = verify_user(data)
+    except ValueError:
         return IncorrectCredentials()
-    user_id = data.get("user_id")
-    if not user_id:
-        return IncorrectCredentials()
-
-    response = requests.post(
-        "{}/verification/verify/".format(settings.VERIFICATION_SERVICE_URL),
-        data=json.dumps({"session_key": session_key, "user_id": user_id})
-    )
-    verification_data = response.json()
-    success = verification_data.get("success")
-    if not success:
-        return IncorrectCredentials()
+    except requests.ConnectionError:
+        return VerificationServiceUnavailable()
 
     location_data = data.get("location")
     if not location_data:
@@ -195,19 +215,16 @@ def create_location(request) -> JsonResponse:
     if "id" in location_data:
         return MalformedJson()
 
-    location_deserializable_data = location_data
-    if "tags" in location_deserializable_data:
-        del location_deserializable_data["tags"]
-    if "categories" in location_deserializable_data:
-        del location_deserializable_data["categories"]
-
-    location = Location(**location_data)
+    location = Location(**{
+        x: location_data[x] for x in location_data
+        if x not in ["tags", "categories"]
+    })
     if location.user_id != user_id:
         return MalformedJson()
     try:
         location.save()
     except IntegrityError:
-        return MalformedJson()
+        return DuplicateLocation()
 
     tags = location_data.get("tags")
     if tags:
@@ -218,7 +235,9 @@ def create_location(request) -> JsonResponse:
     categories = location_data.get("categories")
     if categories:
         for category in categories:
-            category, _ = Tag.objects.get_or_create(**category)
+            category, _ = Category.objects.get_or_create(**category)
             location.categories.add(category)
 
     return SuccessResponse()
+
+

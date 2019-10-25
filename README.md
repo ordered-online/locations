@@ -32,17 +32,23 @@ Method: POST
 This endpoint is secured by verification. The preferred location for the verification service to run is at http://127.0.0.1:8000/.
 You need to pass the verification session key. 
 
-Example payload, which needs to be passed:
+|Parameter|Explanation|
+|-|-|
+|user_id|User id for user verification.|
+|session_key|Session key for user verification.|
+|location|The location to be created, without an id attribute.|
+
+Example location creation with `curl`:
 
 ```
-{
+curl -i -X POST -H 'Content-Type: application/json' -d '{
     "session_key": "r2sao9x3embkskiz8wonygnyrkgipwoc",
     "user_id": 1, 
     "location": { 
         "name":"Studentencaf\u00e9 Ascii",
         "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
         "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-        "user_id":null,
+        "user_id":1,
         "latitude":"51.02508690",
         "longitude":"13.72100050",
         "website":null,
@@ -64,7 +70,7 @@ Example payload, which needs to be passed:
             }
         ]
     }
-}
+}' http://127.0.0.1:8002/locations/create/
 ```
 
 Of course, it is required, that the user 1 exists in the verification service and the session key is still valid.
@@ -82,7 +88,8 @@ $ curl -i -X GET http://127.0.0.1:8002/locations/find/?name=asci
 
 Failure Responses:
 - [IncorrectAccessMethod](#IncorrectAccessMethod) if the service was accessed with any other method than specified.
-
+- [DuplicateLocation](#DuplicateLocation) if the given location exists by means of all unique constraints.
+- [MalformedJson](#MalformedJson) if the given Json was malformed.
 
 ### Find a location with`/locations/find/`
 Finds a location to the given parameters.
@@ -146,17 +153,12 @@ $ curl -i -X GET http://127.0.0.1:8002/locations/find/?tag=calm&category=cafe
    "success":true,
    "response":[ 
       { 
-         "location":{ 
-            # mandatory fields
-         
+         "location":{          
             "id":1,
             "name":"Studentencaf\u00e9 Ascii",
             "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
             "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-            "user_id":null,
-            
-            # optional fields
-            
+            "user_id":null,            
             "latitude":"51.02508690",
             "longitude":"13.72100050",
             "website":null,
@@ -187,6 +189,8 @@ Failure Responses:
 - [IncorrectAccessMethod](#IncorrectAccessMethod) if the service was accessed with any other method than specified.
 - [MalformedJson](#MalformedJson) if the passed json does not conform to the given description.
 - [IncorrectCredentials](#IncorrectCredentials) if the passed credentials are incorrect.
+- [VerificationServiceUnavailable](#VerificationServiceUnavailable) if the verification service could not be contacted.
+
 
 ### Find locations nearby with `/locations/nearby/`
 Finds a location nearby.
@@ -313,6 +317,24 @@ Following failure responses are supported:
 {
     "success":false,
     "reason":"malformed_json"
+}
+```
+
+### DuplicateLocation
+
+```
+{
+    "success":false,
+    "reason":"duplicate_location"
+}
+```
+
+### VerificationServiceUnavailable
+
+```
+{
+    "success":false,
+    "reason":"verification_service_unavailable"
 }
 ```
 
