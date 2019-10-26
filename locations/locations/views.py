@@ -3,10 +3,8 @@ from decimal import Decimal
 from json import JSONDecodeError
 
 import requests
-import typing
 from django.db import IntegrityError
 from django.http import JsonResponse
-from django.views import View
 
 from . import settings
 from .models import Location, Tag, Category
@@ -293,7 +291,7 @@ def edit_location(request, location_id) -> JsonResponse:
     # ensure, that the fetched location
     # belongs to the user
     if user_id != location.user_id:
-        return MalformedJson()
+        return IncorrectCredentials()
 
     location_data = data.get("location")
     if not location_data:

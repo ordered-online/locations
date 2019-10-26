@@ -21,7 +21,7 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('locations/find/', views.find_locations, name="find_location"),
+    path('locations/find/', views.find_locations, name="find_locations"),
     path('locations/nearby/', views.find_nearby_locations, name="find_nearby_locations"),
     path('locations/get/<location_id>/', views.get_location, name="get_location"),
     path('locations/create/', views.create_location, name="create_location"),

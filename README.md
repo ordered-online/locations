@@ -13,7 +13,7 @@ Make sure, that Python 3 and Django are installed. Run the server.
 ```
 $ cd locations
 $ python3 manage.py migrate
-$ python3 manage.py runserver
+$ python3 manage.py runserver 127.0.0.1:8002
 ```
 
 If you want to prepopulate your database with some examples, run:
@@ -86,6 +86,7 @@ Example response:
 
 Failure Responses:
 - [IncorrectAccessMethod](#IncorrectAccessMethod) if the service was accessed with any other method than specified.
+- [IncorrectCredentials](#IncorrectCredentials) if the passed credentials were incorrect.
 - [DuplicateLocation](#DuplicateLocation) if the given location exists by means of all unique constraints.
 - [MalformedJson](#MalformedJson) if the given Json was malformed.
 - [VerificationServiceUnavailable](#VerificationServiceUnavailable) if the verification service could not be contacted.
@@ -153,6 +154,7 @@ Example response:
 
 Failure Responses:
 - [LocationNotFound](#LocationNotFound) if the location under the given id could not be found. 
+- [IncorrectCredentials](#IncorrectCredentials) if the passed credentials were incorrect.
 - [IncorrectAccessMethod](#IncorrectAccessMethod) if the service was accessed with any other method than specified.
 - [MalformedJson](#MalformedJson) if the given Json was malformed.
 - [VerificationServiceUnavailable](#VerificationServiceUnavailable) if the verification service could not be contacted.
@@ -184,7 +186,7 @@ $ curl -i -X GET http://127.0.0.1:8002/locations/find/?name=asci
             "name":"Studentencaf\u00e9 Ascii",
             "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
             "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-            "user_id":null,
+            "user_id":1,
             "latitude":"51.02508690",
             "longitude":"13.72100050",
             "website":null,
@@ -224,7 +226,7 @@ $ curl -i -X GET http://127.0.0.1:8002/locations/find/?tag=calm&category=cafe
             "name":"Studentencaf\u00e9 Ascii",
             "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
             "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-            "user_id":null,            
+            "user_id":1,            
             "latitude":"51.02508690",
             "longitude":"13.72100050",
             "website":null,
@@ -285,7 +287,7 @@ $ curl -i -X GET http://127.0.0.1:8002/locations/nearby/\?latitude\=51.0282096\&
             "name":"Studentencaf\u00e9 Ascii",
             "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
             "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-            "user_id":null,
+            "user_id":1,
             "latitude":"51.02508690",
             "longitude":"13.72100050",
             "website":null,
@@ -333,7 +335,7 @@ $ curl -i -X GET http://127.0.0.1:8002/locations/get/1/
       "name":"Studentencaf\u00e9 Ascii",
       "description":"Gem\u00fctliches Caf\u00e9 in der Fak. Informatik der TU Dresden.",
       "address":"N\u00f6thnitzer Str. 46, 01187 Dresden",
-      "user_id":null,
+      "user_id":1,
       "latitude":"51.02508690",
       "longitude":"13.72100050",
       "website":null,
