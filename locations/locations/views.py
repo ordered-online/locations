@@ -47,7 +47,7 @@ class ErroneousValue(AbstractFailureResponse):
 
 class LocationNotFound(AbstractFailureResponse):
     reason = "location_not_found"
-    status_code = 410
+    status_code = 404
 
 
 class IncorrectSessionKey(AbstractFailureResponse):

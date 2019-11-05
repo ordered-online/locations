@@ -437,7 +437,7 @@ Code: 405
 
 ### LocationNotFound
 
-Code: 410
+Code: 404
 
 ```
 { 
