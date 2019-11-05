@@ -11,6 +11,8 @@ from .models import Location, Tag, Category
 
 
 class SuccessResponse(JsonResponse):
+    status_code = 200
+
     def __init__(self, response=None, *args, **kwargs):
         if response is None:
             super().__init__({
@@ -35,38 +37,47 @@ class AbstractFailureResponse(JsonResponse):
 
 class IncorrectAccessMethod(AbstractFailureResponse):
     reason = "incorrect_access_method"
+    status_code = 405
 
 
 class ErroneousValue(AbstractFailureResponse):
     reason = "erroneous_value"
+    status_code = 400
 
 
 class LocationNotFound(AbstractFailureResponse):
     reason = "location_not_found"
+    status_code = 410
 
 
 class IncorrectSessionKey(AbstractFailureResponse):
     reason = "incorrect_session_key"
+    status_code = 403
 
 
 class IncorrectUserId(AbstractFailureResponse):
     reason = "incorrect_user_id"
+    status_code = 403
 
 
 class MalformedJson(AbstractFailureResponse):
     reason = "malformed_json"
+    status_code = 400
 
 
 class IncorrectCredentials(AbstractFailureResponse):
     reason = "incorrect_credentials"
+    status_code = 403
 
 
 class DuplicateLocation(AbstractFailureResponse):
     reason = "duplicate_location"
+    status_code = 400
 
 
 class VerificationServiceUnavailable(AbstractFailureResponse):
     reason = "verification_service_unavailable"
+    status_code = 503
 
 
 def find_locations(request) -> JsonResponse:

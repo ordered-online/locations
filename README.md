@@ -371,6 +371,8 @@ Following failure responses are supported:
 
 ### IncorrectCredentials
 
+Code: 403
+
 ```
 { 
    "success":false,
@@ -379,6 +381,8 @@ Following failure responses are supported:
 ```
 
 ### MalformedJson
+
+Code: 400
 
 ```
 {
@@ -389,6 +393,8 @@ Following failure responses are supported:
 
 ### DuplicateLocation
 
+Code: 400
+
 ```
 {
     "success":false,
@@ -397,6 +403,8 @@ Following failure responses are supported:
 ```
 
 ### VerificationServiceUnavailable
+
+Code: 503
 
 ```
 {
@@ -407,6 +415,8 @@ Following failure responses are supported:
 
 ### ErroneousValue
 
+Code: 400
+
 ```
 { 
    "success":false,
@@ -416,6 +426,8 @@ Following failure responses are supported:
 
 ### IncorrectAccessMethod
 
+Code: 405
+
 ```
 { 
    "success":false,
@@ -424,6 +436,8 @@ Following failure responses are supported:
 ```
 
 ### LocationNotFound
+
+Code: 410
 
 ```
 { 
