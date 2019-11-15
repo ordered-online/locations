@@ -15,24 +15,16 @@ class SuccessResponse(JsonResponse):
 
     def __init__(self, response=None, *args, **kwargs):
         if response is None:
-            super().__init__({
-                "success": True,
-            }, *args, **kwargs)
+            super().__init__({}, *args, **kwargs)
         else:
-            super().__init__({
-                "success": True,
-                "response": response
-            }, *args, **kwargs)
+            super().__init__(response, *args, **kwargs)
 
 
 class AbstractFailureResponse(JsonResponse):
     reason = None
 
     def __init__(self, *args, **kwargs):
-        super().__init__({
-            "success": False,
-            "reason": self.reason
-        }, *args, **kwargs)
+        super().__init__({"reason": self.reason}, *args, **kwargs)
 
 
 class IncorrectAccessMethod(AbstractFailureResponse):
@@ -118,9 +110,7 @@ def find_locations(request) -> JsonResponse:
 
     return SuccessResponse(
         [
-            {
-                "location": location.dict_representation
-            }
+            location.dict_representation
             for location in locations
         ],
         safe=False
@@ -201,8 +191,8 @@ def verify_user(data: dict) -> tuple:
         "{}/verification/verify/".format(settings.VERIFICATION_SERVICE_URL),
         data=json.dumps({"session_key": session_key, "user_id": user_id})
     )
-    verification_data = response.json()
-    if verification_data.get("success") is not True:
+
+    if response.status_code is not 200:
         raise ValueError()
 
     return user_id, session_key
@@ -236,7 +226,7 @@ def make_location(location_data: dict) -> JsonResponse:
         # infer all kwargs from the passed location data
         location.categories.set(Category.objects.get_or_create(**c)[0] for c in categories)
 
-    return SuccessResponse()
+    return SuccessResponse(location.dict_representation)
 
 
 def create_location(request) -> JsonResponse:
