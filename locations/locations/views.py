@@ -253,8 +253,7 @@ def create_location(request) -> JsonResponse:
     # this is necessary, because the user
     # should not create locations with another
     # user id than his own
-    if location_data.get("user_id") != user_id:
-        return MalformedJson()
+    location_data["user_id"] = user_id
 
     # the key "id" is disallowed, because django
     # would interpret the id key as the primary key
@@ -306,8 +305,7 @@ def edit_location(request, location_id) -> JsonResponse:
 
     # avoid overriding of the wrong location
     # due to erroneous user ids being passed
-    if location_data.get("user_id") != user_id:
-        return MalformedJson()
+    location_data["user_id"] = user_id
 
     # set the id attribute as inferred by the url
     # to make it possible for django to edit
