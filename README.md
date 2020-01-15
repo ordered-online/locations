@@ -22,3 +22,7 @@ If you want to prepopulate your database with some examples, run:
 ```
 $ python3 manage.py load_data
 ```
+
+## Admin panel
+
+The admin panel is accessible to a superuser via `/locations/admin/`
