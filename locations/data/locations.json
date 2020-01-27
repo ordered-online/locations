@@ -28,5 +28,23 @@
       "Cozy"
     ]
   }
+},
+{
+  "model": "locations.location",
+  "pk": 2,
+  "fields": {
+    "name": "APB E010",
+    "description": "Andreas-Pfitzmann-Bau Raum E010 (barrierefrei erreichbar)",
+    "address": "N\u00f6thnitzer Stra\u00dfe 46, 01187 Dresden, Deutschland",
+    "user_id": 1,
+    "latitude": "51.025212",
+    "longitude": "13.723620",
+    "website": "https://tu-dresden.de",
+    "telephone": "+49 351 46340000",
+    "categories": [
+      "Teaching"
+    ],
+    "tags": []
+  }
 }
 ]
