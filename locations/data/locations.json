@@ -10,6 +10,11 @@
   "fields": {}
 },
 {
+  "model": "locations.category",
+  "pk": "Teaching",
+  "fields": {}
+},
+{
   "model": "locations.location",
   "pk": 1,
   "fields": {
